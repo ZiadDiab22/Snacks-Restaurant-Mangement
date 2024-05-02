@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\products_type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -95,5 +96,14 @@ class UserController extends Controller
             'status' => true,
             'message' => "User logged out successfully"
         ]);
+    }
+
+    public function showProductTypes()
+    {
+        $var = products_type::get();
+        return response([
+            'status' => true,
+            'types' => $var
+        ], 200);
     }
 }
