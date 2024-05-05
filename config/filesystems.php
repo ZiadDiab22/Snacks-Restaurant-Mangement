@@ -51,6 +51,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'public_htmlProducts' => [
+            'driver' => 'local',
+            'root' => base_path('public_html/products'), // Path outside public directory
+            'url' => env('APP_URL') . '/public_html/products',
+            'visibility' => 'public',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -15,14 +15,13 @@ return new class extends Migration
             $table->increments('id');
             $table->string('name');
             $table->unsignedInteger('type_id');
-            $table->string('disc');
+            $table->string('disc')->nullable()->default(null);
             $table->integer('price');
             $table->integer('quantity');
-            $table->integer('source_price');
-            $table->float('discount_rate');
-            $table->integer('likes');
-            $table->string('img_url')->nullable()->default(null);;
-            $table->boolean('visible')->nullable()->default(1);
+            $table->float('discount_rate')->nullable()->default(null);
+            $table->integer('likes')->default(0);
+            $table->string('img_url')->nullable()->default(null);
+            $table->boolean('visible')->default(1);
             $table->foreign('type_id')->references('id')
                 ->on('products_types')->onDelete('cascade');
         });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\product;
 use App\Models\products_type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -104,6 +105,69 @@ class UserController extends Controller
         return response([
             'status' => true,
             'types' => $var
+        ], 200);
+    }
+
+    public function showProducts()
+    {
+        $products = product::join('products_types', 'type_id', 'products_types.id')
+            ->get([
+                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
+                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+            ]);
+
+        $types = products_type::get();
+
+        return response([
+            'status' => true,
+            'products' => $products,
+            'products_types' => $types
+        ], 200);
+    }
+
+    public function showProductsByLikes()
+    {
+        $products = product::join('products_types', 'type_id', 'products_types.id')
+            ->orderBy('likes', 'desc')->get([
+                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
+                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+            ]);
+
+        $types = products_type::get();
+
+        return response([
+            'status' => true,
+            'products' => $products,
+            'products_types' => $types
+        ], 200);
+    }
+
+    public function profile()
+    {
+        $user = User::where('users.id', auth()->user()->id)
+            ->leftjoin('cities', 'city_id', 'cities.id')
+            ->join('roles', 'role_id', 'roles.id')
+            ->get([
+                'users.id',
+                'users.name',
+                'sector_id',
+                'role_id',
+                'roles.name as role_name',
+                'city_id',
+                'cities.name as city_name',
+                'email',
+                'birth_date',
+                'gender',
+                'phone_no',
+                'img_url',
+                'badget',
+                'created_at',
+                'updated_at'
+            ]);
+
+        return response([
+            'status' => true,
+            'user' => $user,
         ], 200);
     }
 }

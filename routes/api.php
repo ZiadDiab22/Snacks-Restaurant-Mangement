@@ -12,6 +12,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post("register", [UserController::class, "register"]);
 Route::post("login", [UserController::class, "login"]);
 Route::get("showProductTypes", [UserController::class, "showProductTypes"]);
+Route::get("showProducts", [UserController::class, "showProducts"]);
+Route::get("showProductsByLikes", [UserController::class, "showProductsByLikes"]);
 
 Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("logout", [UserController::class, "logout"]);
@@ -19,4 +21,5 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("deleteProductType", [AdminController::class, "deleteProductType"])->middleware('checkAdminId');
     Route::post("editProductType", [AdminController::class, "editProductType"])->middleware('checkAdminId');
     Route::post("addProduct", [AdminController::class, "addProduct"])->middleware('checkEmpId');
+    Route::get("profile", [UserController::class, "profile"]);
 });
