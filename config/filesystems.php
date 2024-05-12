@@ -51,6 +51,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'public_htmlAds' => [
+            'driver' => 'local',
+            'root' => base_path('public_html/Ads'), // Path outside public directory
+            'url' => env('APP_URL') . '/public_html/Ads',
+            'visibility' => 'public',
+        ],
+
         'public_htmlProducts' => [
             'driver' => 'local',
             'root' => base_path('public_html/products'), // Path outside public directory

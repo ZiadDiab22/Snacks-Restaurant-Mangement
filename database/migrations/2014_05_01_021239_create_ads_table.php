@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('ads', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('img_url');
-            $table->string('disc');
-            $table->string('link');
+            $table->string('img_url')->nullable()->default(null);
+            $table->string('disc')->nullable()->default(null);
+            $table->string('link')->nullable()->default(null);
         });
     }
 

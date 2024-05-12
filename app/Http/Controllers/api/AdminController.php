@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ad;
 use App\Models\product;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -65,6 +66,7 @@ class AdminController extends Controller
 
     public function addProduct(Request $request)
     {
+
         $validatedData = $request->validate([
             'name' => 'required',
             'type_id' => 'required',
@@ -110,5 +112,38 @@ class AdminController extends Controller
             'message' => 'added Successfully',
             'products' => $var,
         ]);
+    }
+
+    public function shareAd(Request $request)
+    {
+        $validatedData = $request->validate([
+            'img_url' => 'image|mimes:jpg,webp,png,jpeg,gif,svg|max:2048',
+        ]);
+
+        if ($request->has('img_url')) {
+            $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
+            Storage::disk('public_htmlAds')->put($image1, file_get_contents($request->img_url));
+
+            $image1 = asset('Ads/' . $image1);
+
+            $validatedData['img_url'] = $image1;
+        }
+
+        if ($request->has('link')) {
+            $validatedData['link'] = $request->link;
+        }
+
+        if ($request->has('disc')) {
+            $validatedData['disc'] = $request->disc;
+        }
+
+        ad::create($validatedData);
+        $ads = ad::get();
+
+        return response([
+            'status' => true,
+            'message' => "done successfully",
+            'ads' => $ads,
+        ], 200);
     }
 }

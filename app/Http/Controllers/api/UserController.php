@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ad;
+use App\Models\like;
 use App\Models\product;
 use App\Models\products_type;
 use Illuminate\Http\Request;
@@ -168,6 +170,49 @@ class UserController extends Controller
         return response([
             'status' => true,
             'user' => $user,
+        ], 200);
+    }
+
+    public function home()
+    {
+        $products = product::join('products_types', 'type_id', 'products_types.id')
+            ->orderBy('likes', 'desc')->get([
+                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
+                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+            ]);
+
+        $types = products_type::get();
+
+        $ads = ad::get();
+
+        return response([
+            'status' => true,
+            'ads' => $ads,
+            'products_types' => $types,
+            'best_products' => $products,
+        ], 200);
+    }
+
+    public function toggleLike($id)
+    {
+        if (!(product::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'product not found, wrong product id'
+            ], 200);
+        }
+
+        if (!(like::where('product_id', $id)->where('user_id', auth()->user()->id)->exists())) {
+            $fav = new like([
+                'user_id' => auth()->user()->id,
+                'product_id' => $id
+            ]);
+            $fav->save();
+        } else like::where('product_id', $id)->where('user_id', auth()->user()->id)->delete();
+
+        return response([
+            'status' => true,
+            'message' => "done successfully"
         ], 200);
     }
 }

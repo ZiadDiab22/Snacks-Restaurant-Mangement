@@ -14,6 +14,7 @@ Route::post("login", [UserController::class, "login"]);
 Route::get("showProductTypes", [UserController::class, "showProductTypes"]);
 Route::get("showProducts", [UserController::class, "showProducts"]);
 Route::get("showProductsByLikes", [UserController::class, "showProductsByLikes"]);
+Route::get("home", [UserController::class, "home"]);
 
 Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("logout", [UserController::class, "logout"]);
@@ -21,5 +22,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("deleteProductType", [AdminController::class, "deleteProductType"])->middleware('checkAdminId');
     Route::post("editProductType", [AdminController::class, "editProductType"])->middleware('checkAdminId');
     Route::post("addProduct", [AdminController::class, "addProduct"])->middleware('checkEmpId');
+    Route::post("shareAd", [AdminController::class, "shareAd"])->middleware('checkEmpId');
+    Route::get("toggleLike/{id}", [UserController::class, "toggleLike"])->middleware('checkUserId');
     Route::get("profile", [UserController::class, "profile"]);
 });

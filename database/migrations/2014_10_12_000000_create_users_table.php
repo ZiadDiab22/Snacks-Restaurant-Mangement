@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedInteger('sector_id')->nullable()->default(null);
             $table->unsignedInteger('role_id');
-            $table->unsignedInteger('city_id')->nullable()->default(null);;
+            $table->unsignedInteger('city_id')->nullable()->default(null);
             $table->string('email', 50)->unique();
             $table->date('birth_date');
             $table->string('password')->unique();
