@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             CountriesSeeder::class,
             UserSeeder::class,
+            StatusesSeeder::class,
+            ProductsTypesSeeder::class,
         ]);
     }
 }

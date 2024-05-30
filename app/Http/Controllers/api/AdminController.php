@@ -8,6 +8,8 @@ use App\Models\product;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\products_type;
+use App\Models\sector;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -114,6 +116,28 @@ class AdminController extends Controller
         ]);
     }
 
+    public function addSector(Request $request)
+    {
+        $validatedData = $request->validate([
+            'city_id' => 'required',
+            'lat' => 'required',
+            'lng' => 'required',
+        ]);
+
+        sector::create($validatedData);
+
+        $sectors = sector::join('cities', 'city_id', 'cities.id')
+            ->get([
+                'sectors.id', 'city_id', 'cities.name', 'lat', 'lng'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'added Successfully',
+            'sectors' => $sectors,
+        ]);
+    }
+
     public function shareAd(Request $request)
     {
         $validatedData = $request->validate([
@@ -145,5 +169,84 @@ class AdminController extends Controller
             'message' => "done successfully",
             'ads' => $ads,
         ], 200);
+    }
+
+    public function deleteAd($id)
+    {
+        if (!(ad::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'not found, wrong id'
+            ], 200);
+        }
+
+        ad::where('id', $id)->delete();
+        $ads = ad::get();
+
+        return response([
+            'status' => true,
+            'message' => "done successfully",
+            'ads' => $ads,
+        ], 200);
+    }
+
+    public function toggleBlockProduct($id)
+    {
+        if (!(product::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'product not found, wrong product id'
+            ], 200);
+        }
+
+        $product = product::find($id);
+        if ($product->visible == 0) $product->visible = 1;
+        else $product->visible = 0;
+        $product->save();
+
+        return response([
+            'status' => true,
+            'message' => 'done Successfully',
+        ]);
+    }
+
+    public function toggleBlockUser($id)
+    {
+        if (!(User::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'user not found, wrong id'
+            ], 200);
+        }
+
+        $user = User::find($id);
+        if ($user->blocked == 0) $user->blocked = 1;
+        else $user->blocked = 0;
+        $user->save();
+
+        return response([
+            'status' => true,
+            'message' => 'done Successfully',
+        ]);
+    }
+
+    public function toggleBlockSector($id)
+    {
+        if (!(sector::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'not found, wrong id'
+            ], 200);
+        }
+
+        $sec = sector::find($id);
+        if ($sec->blocked == 0) $sec->blocked = 1;
+        else $sec->blocked = 0;
+        $sec->save();
+
+        return response([
+            'status' => true,
+            'message' => 'done Successfully',
+        ]);
     }
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedInteger('city_id');
             $table->float('lat');
             $table->float('lng');
+            $table->boolean('blocked')->default(0);
             $table->foreign('city_id')->references('id')
                 ->on('cities')->onDelete('cascade');
         });

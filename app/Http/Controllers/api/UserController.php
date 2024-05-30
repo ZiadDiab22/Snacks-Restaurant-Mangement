@@ -4,9 +4,12 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ad;
+use App\Models\favourite;
 use App\Models\like;
+use App\Models\order;
 use App\Models\product;
 use App\Models\products_type;
+use App\Models\question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -213,6 +216,134 @@ class UserController extends Controller
         return response([
             'status' => true,
             'message' => "done successfully"
+        ], 200);
+    }
+
+    public function sendMsg(Request $request)
+    {
+        $validatedData = $request->validate([
+            'question' => 'required',
+        ]);
+
+        $validatedData['user_id'] = auth()->user()->id;
+        question::create($validatedData);
+
+        return response([
+            'status' => true,
+            'message' => "send successfully"
+        ], 200);
+    }
+
+    public function cancelOrder($id)
+    {
+        if (!(order::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'order not found, wrong id'
+            ], 200);
+        }
+
+        if (!(order::where('id', $id)->where('user_id', auth()->user()->id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'this order isnt for you, wrong id'
+            ], 200);
+        }
+
+        $order = order::find($id);
+
+        if ($order->status_id == 1) {
+            $order->status_id = 4;
+            $order->save();
+            return response([
+                'status' => true,
+                'message' => 'done successfully'
+            ], 200);
+        } else if ($order->status_id == 4) {
+            return response([
+                'status' => true,
+                'message' => 'order already cancelled'
+            ], 200);
+        } else if ($order->status_id == 2) {
+            return response([
+                'status' => true,
+                'message' => 'The order cant be canceled because its in progress'
+            ], 200);
+        } else {
+            return response([
+                'status' => true,
+                'message' => 'The order cant be canceled because its already done'
+            ], 200);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        if ($request->has('name')) {
+            $products = product::where('products.name', 'like', '%' . $request->name . '%')->where('visible', 1)->where('quantity', '>', 0)
+                ->join('products_types as pt', 'products.type_id', 'pt.id')
+                ->get([
+                    'products.id', 'products.name', 'type_id', 'pt.name as type', 'disc', 'discount_rate',
+                    'price', 'quantity', 'img_url', 'visible', 'likes'
+                ]);
+        } else if ($request->has('type_id')) {
+            $products = product::where('type_id', $request->type_id)->where('visible', 1)->where('quantity', '>', 0)
+                ->join('products_types as pt', 'products.type_id', 'pt.id')
+                ->get([
+                    'products.id', 'products.name', 'type_id', 'pt.name as type', 'disc', 'discount_rate',
+                    'price', 'quantity', 'img_url', 'visible', 'likes'
+                ]);
+        } else {
+            $products = product::where('visible', 1)->where('quantity', '>', 0)
+                ->join('products_types as pt', 'products.type_id', 'pt.id')
+                ->orderBy('likes', 'desc')
+                ->get([
+                    'products.id', 'products.name', 'type_id', 'pt.name as type', 'disc', 'discount_rate',
+                    'price', 'quantity', 'img_url', 'visible', 'likes'
+                ]);
+        }
+        return response([
+            'status' => true,
+            'products' => $products
+        ], 200);
+    }
+
+    public function toggleFavourite($id)
+    {
+        if (!(product::where('id', $id)->exists())) {
+            return response([
+                'status' => false,
+                'message' => 'product not found, wrong product id'
+            ], 200);
+        }
+
+        if (!(favourite::where('product_id', $id)->where('user_id', auth()->user()->id)->exists())) {
+            $fav = new favourite([
+                'user_id' => auth()->user()->id,
+                'product_id' => $id
+            ]);
+            $fav->save();
+        } else favourite::where('product_id', $id)->where('user_id', auth()->user()->id)->delete();
+
+        return response([
+            'status' => true,
+            'message' => "done successfully"
+        ], 200);
+    }
+
+    public function showFavourites()
+    {
+        $fav = favourite::where('user_id', auth()->user()->id)
+            ->join('products', 'products.id', 'user_id')
+            ->get(['favourites.id', 'user_id', 'product_id', 'name', 'price', 'img_url', 'likes']);
+        foreach ($fav as $f) {
+            if (like::where('product_id', $f['product_id'])->where('user_id', auth()->user()->id)->exists())
+                $f['is_like'] = true;
+            else  $f['is_like'] = false;
+        }
+        return response([
+            'status' => true,
+            'message' => $fav
         ], 200);
     }
 }
