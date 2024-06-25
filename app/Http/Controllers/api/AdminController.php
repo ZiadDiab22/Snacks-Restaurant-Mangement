@@ -235,7 +235,7 @@ class AdminController extends Controller
         if (!(sector::where('id', $id)->exists())) {
             return response([
                 'status' => false,
-                'message' => 'not found, wrong id'
+                'message' => 'not found, Wrong id'
             ], 200);
         }
 
