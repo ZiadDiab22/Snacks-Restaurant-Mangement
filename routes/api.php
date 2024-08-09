@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\api\AdminController;
+use Illuminate\Support\Facades\File;
+use Illuminate\Http\Response;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -16,6 +18,28 @@ Route::get("showProducts", [UserController::class, "showProducts"]);
 Route::get("showProductsByLikes", [UserController::class, "showProductsByLikes"]);
 Route::get("home", [UserController::class, "home"]);
 Route::post("search", [UserController::class, "search"]);
+
+Route::get('UsersPhotos/{filename}', function ($filename) {
+    $path = base_path('public_html/UsersPhotos/' . $filename);
+    if (!File::exists($path)) {
+        abort(404, 'File not found');
+    }
+    return response()->file($path);;
+});
+Route::get('Ads/{filename}', function ($filename) {
+    $path = base_path('public_html/Ads/' . $filename);
+    if (!File::exists($path)) {
+        abort(404, 'File not found');
+    }
+    return response()->file($path);;
+});
+Route::get('products/{filename}', function ($filename) {
+    $path = base_path('public_html/products/' . $filename);
+    if (!File::exists($path)) {
+        abort(404, 'File not found');
+    }
+    return response()->file($path);;
+});
 
 Route::group(["middleware" => ["auth:api"]], function () {
     Route::get("profile", [UserController::class, "profile"]);

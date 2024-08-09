@@ -25,6 +25,9 @@ class RolesSeeder extends Seeder
             "name" => "employee",
         ]);
         role::create([
+            "name" => "delivery employee",
+        ]);
+        role::create([
             "name" => "user",
         ]);
     }

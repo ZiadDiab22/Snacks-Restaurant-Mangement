@@ -97,7 +97,7 @@ class AdminController extends Controller
         if ($request->has('img_url')) {
             $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
             Storage::disk('public_htmlProducts')->put($image1, file_get_contents($request->img_url));
-            $image1 = asset('products/' . $image1);
+            $image1 = asset('api/products/' . $image1);
             $validatedData['img_url'] = $image1;
         }
 
@@ -105,8 +105,17 @@ class AdminController extends Controller
 
         $var = product::join('products_types', 'type_id', 'products_types.id')
             ->get([
-                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
-                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
             ]);
 
         return response()->json([
@@ -128,7 +137,11 @@ class AdminController extends Controller
 
         $sectors = sector::join('cities', 'city_id', 'cities.id')
             ->get([
-                'sectors.id', 'city_id', 'cities.name', 'lat', 'lng'
+                'sectors.id',
+                'city_id',
+                'cities.name',
+                'lat',
+                'lng'
             ]);
 
         return response()->json([
@@ -148,7 +161,7 @@ class AdminController extends Controller
             $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
             Storage::disk('public_htmlAds')->put($image1, file_get_contents($request->img_url));
 
-            $image1 = asset('Ads/' . $image1);
+            $image1 = asset('api/Ads/' . $image1);
 
             $validatedData['img_url'] = $image1;
         }

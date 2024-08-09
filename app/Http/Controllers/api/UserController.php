@@ -44,12 +44,12 @@ class UserController extends Controller
         }
 
         $validatedData['password'] = bcrypt($request->password);
-        $validatedData['role_id'] = 3;
+        $validatedData['role_id'] = 4;
 
         if ($request->has('img_url')) {
             $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
             Storage::disk('public_htmlUsersPhotos')->put($image1, file_get_contents($request->img_url));
-            $image1 = asset('UsersPhotos/' . $image1);
+            $image1 = asset('api/UsersPhotos/' . $image1);
             $validatedData['img_url'] = $image1;
         }
         if ($request->has('sector_id')) {
@@ -117,8 +117,17 @@ class UserController extends Controller
     {
         $products = product::join('products_types', 'type_id', 'products_types.id')
             ->get([
-                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
-                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
             ]);
 
         $types = products_type::get();
@@ -134,8 +143,17 @@ class UserController extends Controller
     {
         $products = product::join('products_types', 'type_id', 'products_types.id')
             ->orderBy('likes', 'desc')->get([
-                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
-                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
             ]);
 
         $types = products_type::get();
@@ -180,8 +198,17 @@ class UserController extends Controller
     {
         $products = product::join('products_types', 'type_id', 'products_types.id')
             ->orderBy('likes', 'desc')->get([
-                'products.id', 'products.name', 'type_id', 'products_types.name as type_name',
-                'discount_rate', 'disc', 'likes', 'price', 'quantity', 'img_url', 'visible'
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
             ]);
 
         $types = products_type::get();
@@ -283,23 +310,50 @@ class UserController extends Controller
             $products = product::where('products.name', 'like', '%' . $request->name . '%')->where('visible', 1)->where('quantity', '>', 0)
                 ->join('products_types as pt', 'products.type_id', 'pt.id')
                 ->get([
-                    'products.id', 'products.name', 'type_id', 'pt.name as type', 'disc', 'discount_rate',
-                    'price', 'quantity', 'img_url', 'visible', 'likes'
+                    'products.id',
+                    'products.name',
+                    'type_id',
+                    'pt.name as type',
+                    'disc',
+                    'discount_rate',
+                    'price',
+                    'quantity',
+                    'img_url',
+                    'visible',
+                    'likes'
                 ]);
         } else if ($request->has('type_id')) {
             $products = product::where('type_id', $request->type_id)->where('visible', 1)->where('quantity', '>', 0)
                 ->join('products_types as pt', 'products.type_id', 'pt.id')
                 ->get([
-                    'products.id', 'products.name', 'type_id', 'pt.name as type', 'disc', 'discount_rate',
-                    'price', 'quantity', 'img_url', 'visible', 'likes'
+                    'products.id',
+                    'products.name',
+                    'type_id',
+                    'pt.name as type',
+                    'disc',
+                    'discount_rate',
+                    'price',
+                    'quantity',
+                    'img_url',
+                    'visible',
+                    'likes'
                 ]);
         } else {
             $products = product::where('visible', 1)->where('quantity', '>', 0)
                 ->join('products_types as pt', 'products.type_id', 'pt.id')
                 ->orderBy('likes', 'desc')
                 ->get([
-                    'products.id', 'products.name', 'type_id', 'pt.name as type', 'disc', 'discount_rate',
-                    'price', 'quantity', 'img_url', 'visible', 'likes'
+                    'products.id',
+                    'products.name',
+                    'type_id',
+                    'pt.name as type',
+                    'disc',
+                    'discount_rate',
+                    'price',
+                    'quantity',
+                    'img_url',
+                    'visible',
+                    'likes'
                 ]);
         }
         return response([
