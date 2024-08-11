@@ -4,12 +4,16 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ad;
+use App\Models\city;
 use App\Models\product;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\products_type;
 use App\Models\sector;
 use App\Models\User;
+use App\Models\country;
+use App\Models\question;
+use Database\Seeders\CountriesSeeder;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -260,6 +264,174 @@ class AdminController extends Controller
         return response([
             'status' => true,
             'message' => 'done Successfully',
+        ]);
+    }
+
+    public function addCity(Request $request)
+    {
+        $validatedData = $request->validate([
+            'country_id' => 'required',
+            'lat' => 'required',
+            'lng' => 'required',
+            'name' => 'required',
+        ]);
+
+        city::create($validatedData);
+
+        $cities = city::join('countries', 'country_id', 'countries.id')
+            ->get([
+                'cities.id',
+                'country_id',
+                'countries.name as country_name',
+                'cities.name as city_name',
+                'lat',
+                'lng'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'added Successfully',
+            'cities' => $cities,
+        ]);
+    }
+
+    public function editCity(Request $request)
+    {
+        $request->validate([
+            'city_id' => 'required',
+        ]);
+
+        if (!(city::where('id', $request->city_id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong City ID"
+            ], 200);
+        }
+
+        $city = city::find($request->city_id);
+
+        if ($request->has('country_id')) {
+            if (!(country::where('id', $request->country_id)->exists())) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Wrong Country ID"
+                ], 200);
+            }
+        }
+
+        $input = $request->all();
+
+        foreach ($input as $key => $value) {
+            if (in_array($key, ['name', 'country_id', 'lat', 'lng']) && !empty($value)) {
+                $city->$key = $value;
+            }
+        }
+
+        $city->save();
+
+        $cities = city::join('countries', 'country_id', 'countries.id')
+            ->get([
+                'cities.id',
+                'country_id',
+                'countries.name as country_name',
+                'cities.name as city_name',
+                'lat',
+                'lng'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'edited Successfully',
+            'cities' => $cities,
+        ]);
+    }
+
+    public function editSector(Request $request)
+    {
+        $request->validate([
+            'sector_id' => 'required',
+        ]);
+
+        if (!(sector::where('id', $request->sector_id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong Sector ID"
+            ], 200);
+        }
+
+        if ($request->has('city_id')) {
+            if (!(city::where('id', $request->city_id)->exists())) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Wrong City ID"
+                ], 200);
+            }
+        }
+
+        $sector = sector::find($request->sector_id);
+
+        $input = $request->all();
+
+        foreach ($input as $key => $value) {
+            if (in_array($key, ['city_id', 'lat', 'lng']) && !empty($value)) {
+                $sector->$key = $value;
+            }
+        }
+
+        $sector->save();
+
+        $sectors = sector::join('cities', 'city_id', 'cities.id')
+            ->get([
+                'sectors.id',
+                'city_id',
+                'cities.name as city_name',
+                'cities.lat as city_lat',
+                'cities.lng as city_lng',
+                'sectors.lat as sector_lat',
+                'sectors.lng as sector_lng'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'edited Successfully',
+            'sectors' => $sectors,
+        ]);
+    }
+
+    public function showMsgs()
+    {
+        $msgs = question::get();
+
+        return response()->json([
+            'status' => true,
+            'messages' => $msgs
+        ]);
+    }
+
+    public function addAnswer(Request $request)
+    {
+        $request->validate([
+            'question_id' => 'required',
+            'answer' => 'required',
+        ]);
+
+        if (!(question::where('id', $request->question_id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong ID"
+            ], 200);
+        }
+
+        $question = question::find($request->question_id);
+        $question->answer = $request->answer;
+        $question->emp_id = auth()->user()->id;
+        $question->save();
+
+        $msgs = question::get();
+
+        return response()->json([
+            'status' => true,
+            'messages' => $msgs
         ]);
     }
 }

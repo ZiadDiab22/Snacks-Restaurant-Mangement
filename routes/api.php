@@ -18,6 +18,8 @@ Route::get("showProducts", [UserController::class, "showProducts"]);
 Route::get("showProductsByLikes", [UserController::class, "showProductsByLikes"]);
 Route::get("home", [UserController::class, "home"]);
 Route::post("search", [UserController::class, "search"]);
+Route::get("showCitiesSectors", [UserController::class, "showCitiesSectors"]);
+Route::get("showSectors", [UserController::class, "showSectors"]);
 
 Route::get('UsersPhotos/{filename}', function ($filename) {
     $path = base_path('public_html/UsersPhotos/' . $filename);
@@ -59,4 +61,9 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("sendMsg", [UserController::class, "sendMsg"])->middleware('checkUserId');
     Route::get("cancelOrder/{id}", [UserController::class, "cancelOrder"])->middleware('checkUserId');
     Route::post("addSector", [AdminController::class, "addSector"])->middleware('checkAdminId');
+    Route::post("addCity", [AdminController::class, "addCity"])->middleware('checkAdminId');
+    Route::post("editCity", [AdminController::class, "editCity"])->middleware('checkAdminId');
+    Route::post("editSector", [AdminController::class, "editSector"])->middleware('checkAdminId');
+    Route::post("addAnswer", [AdminController::class, "addAnswer"])->middleware('checkEmpId');
+    Route::get("showMsgs", [AdminController::class, "showMsgs"])->middleware('checkEmpId');
 });

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('question')->nullable()->default(null);
             $table->unsignedInteger('emp_id')->nullable()->default(null);
             $table->string('answer')->nullable()->default(null);
+            $table->timestamps();
             $table->foreign('emp_id')->references('id')
                 ->on('users')->onDelete('cascade');
             $table->foreign('user_id')->references('id')

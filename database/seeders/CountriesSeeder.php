@@ -19,10 +19,26 @@ class CountriesSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         country::create([
-            "name" => "syria",
+            "name" => "Kuwait",
         ]);
         country::create([
-            "name" => "egypt",
+            "name" => "Syria",
         ]);
+        country::create([
+            "name" => "Egypt",
+        ]);
+
+        DB::statement("ALTER TABLE cities AUTO_INCREMENT =  1");
+
+        $json = file_get_contents(resource_path('cities.json'));
+        $data = json_decode($json, true);
+        foreach ($data as $item) {
+            DB::table('cities')->insert([
+                'name' => $item['city'],
+                'lat' => $item['lat'],
+                'lng' => $item['lng'],
+                'country_id' => 1,
+            ]);
+        }
     }
 }

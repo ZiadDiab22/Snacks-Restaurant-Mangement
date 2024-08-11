@@ -4,17 +4,20 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ad;
+use App\Models\city;
 use App\Models\favourite;
 use App\Models\like;
 use App\Models\order;
 use App\Models\product;
 use App\Models\products_type;
 use App\Models\question;
+use App\Models\sector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -399,5 +402,55 @@ class UserController extends Controller
             'status' => true,
             'message' => $fav
         ], 200);
+    }
+
+    public function showCitiesSectors()
+    {
+        $cities = city::join('countries', 'country_id', 'countries.id')
+            ->get([
+                'cities.id',
+                'country_id',
+                'countries.name as country_name',
+                'cities.name as city_name',
+                'lat',
+                'lng'
+            ]);
+
+        $sectors = sector::join('cities', 'city_id', 'cities.id')
+            ->get([
+                'sectors.id',
+                'city_id',
+                'cities.name as city_name',
+                'cities.lat as city_lat',
+                'cities.lng as city_lng',
+                'sectors.lat as sector_lat',
+                'sectors.lng as sector_lng'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'sectors' => $sectors,
+            'cities' => $cities,
+        ]);
+    }
+
+    public function showSectors()
+    {
+
+        $sectors = sector::join('cities', 'city_id', 'cities.id')
+            ->get([
+                'sectors.id',
+                'city_id',
+                'cities.name as city_name',
+                'cities.lat as city_lat',
+                'cities.lng as city_lng',
+                'sectors.lat as sector_lat',
+                'sectors.lng as sector_lng'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'sectors' => $sectors,
+        ]);
     }
 }
