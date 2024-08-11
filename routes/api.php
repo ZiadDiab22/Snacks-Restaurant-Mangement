@@ -45,6 +45,7 @@ Route::get('products/{filename}', function ($filename) {
 
 Route::group(["middleware" => ["auth:api"]], function () {
     Route::get("profile", [UserController::class, "profile"]);
+    Route::post("editProfile", [UserController::class, "editProfile"]);
     Route::post("logout", [UserController::class, "logout"]);
     Route::post("addProductType", [AdminController::class, "addProductType"])->middleware('checkAdminId');
     Route::post("deleteProductType", [AdminController::class, "deleteProductType"])->middleware('checkAdminId');
@@ -66,4 +67,5 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("editSector", [AdminController::class, "editSector"])->middleware('checkAdminId');
     Route::post("addAnswer", [AdminController::class, "addAnswer"])->middleware('checkEmpId');
     Route::get("showMsgs", [AdminController::class, "showMsgs"])->middleware('checkEmpId');
+    Route::post("createEmpAccount", [AdminController::class, "createEmpAccount"])->middleware('checkAdminId');
 });

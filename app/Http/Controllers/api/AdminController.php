@@ -434,4 +434,62 @@ class AdminController extends Controller
             'messages' => $msgs
         ]);
     }
+
+    public function createEmpAccount(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required',
+            'email' => 'email|required',
+            'password' => 'required',
+            'phone_no' => 'required',
+            'gender' => 'required',
+            'birth_date' => 'required',
+            'role_id' => 'required',
+        ]);
+
+        if (User::where('email', $request->email)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => "email is taken"
+            ], 200);
+        }
+
+        if (User::where('phone_no', $request->phone_no)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => "phone number is taken"
+            ], 200);
+        }
+
+        if ($request->has('role_id') && $request->input('role_id') == 2 && (!$request->has('sector_id'))) {
+            return response()->json([
+                'status' => false,
+                'message' => "sector id is required when registering sector employees."
+            ], 200);
+        }
+
+        $validatedData['password'] = bcrypt($request->password);
+
+        if ($request->has('img_url')) {
+            $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
+            Storage::disk('public_htmlUsersPhotos')->put($image1, file_get_contents($request->img_url));
+            $image1 = asset('api/UsersPhotos/' . $image1);
+            $validatedData['img_url'] = $image1;
+        }
+        if ($request->has('city_id')) {
+            $validatedData['city_id'] = $request->city_id;
+        }
+        if ($request->has('sector_id')) {
+            $validatedData['sector_id'] = $request->sector_id;
+        }
+
+        $user = User::create($validatedData);
+
+        $user_data = User::where('id', $user->id)->first();
+
+        return response()->json([
+            'status' => true,
+            'user_data' => $user_data
+        ]);
+    }
 }

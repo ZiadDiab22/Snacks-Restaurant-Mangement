@@ -191,9 +191,12 @@ class UserController extends Controller
                 'updated_at'
             ]);
 
+        $msgs = question::where('user_id', auth()->user()->id)->whereNotNull('emp_id')->get();
+
         return response([
             'status' => true,
-            'user' => $user,
+            'user_data' => $user,
+            'user_messages' => $msgs,
         ], 200);
     }
 
@@ -451,6 +454,77 @@ class UserController extends Controller
         return response()->json([
             'status' => true,
             'sectors' => $sectors,
+        ]);
+    }
+
+    public function editProfile(Request $request)
+    {
+        $request->validate([
+            'email' => 'email',
+        ]);
+
+        $user = user::find(auth()->user()->id);
+
+        $input = $request->all();
+
+        if ($request->has('city_id')) {
+            if (!(city::where('id', $request->city_id)->exists())) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Wrong city ID"
+                ], 200);
+            }
+        }
+
+        if ($request->has('phone_no')) {
+            if (User::where('phone_no', $request->phone_no)->exists()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "phone number is taken"
+                ], 200);
+            }
+        }
+
+        foreach ($input as $key => $value) {
+            if (in_array($key, ['name', 'city_id', 'email', 'birth_date', 'phone_no']) && !empty($value)) {
+                $user->$key = $value;
+            }
+        }
+
+        if ($request->has('img_url')) {
+            $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
+            Storage::disk('public_htmlUsersPhotos')->put($image1, file_get_contents($request->img_url));
+            $image1 = asset('api/UsersPhotos/' . $image1);
+            $user->img_url = $image1;
+        }
+
+        $user->save();
+
+        $user_data = User::where('users.id', auth()->user()->id)
+            ->leftjoin('cities', 'city_id', 'cities.id')
+            ->join('roles', 'role_id', 'roles.id')
+            ->get([
+                'users.id',
+                'users.name',
+                'sector_id',
+                'role_id',
+                'roles.name as role_name',
+                'city_id',
+                'cities.name as city_name',
+                'email',
+                'birth_date',
+                'gender',
+                'phone_no',
+                'img_url',
+                'badget',
+                'created_at',
+                'updated_at'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'edited Successfully',
+            'user_data' => $user_data,
         ]);
     }
 }
