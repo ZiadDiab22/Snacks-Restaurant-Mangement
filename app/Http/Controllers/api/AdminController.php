@@ -221,9 +221,25 @@ class AdminController extends Controller
         else $product->visible = 0;
         $product->save();
 
+        $var = product::join('products_types', 'type_id', 'products_types.id')
+            ->get([
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
+            ]);
+
         return response([
             'status' => true,
             'message' => 'done Successfully',
+            'products' => $var,
         ]);
     }
 
@@ -491,5 +507,84 @@ class AdminController extends Controller
             'status' => true,
             'user_data' => $user_data
         ]);
+    }
+
+    public function editProduct(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required',
+        ]);
+
+        if (!(product::where('id', $request->product_id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong Product ID"
+            ], 200);
+        }
+
+        if ($request->has('type_id')) {
+            if (!(products_type::where('id', $request->type_id)->exists())) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Wrong type ID"
+                ], 200);
+            }
+        }
+
+        if ((($request->has('price')) && ($request->price < 0)) || (($request->has('quantity')) && ($request->quantity < 0))) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong negative value"
+            ], 200);
+        }
+
+        if (($request->has('discount_rate')) && (($request->discount_rate < 0) || ($request->discount_rate > 100))) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong Discount value"
+            ], 200);
+        }
+
+        $product = product::find($request->product_id);
+
+        $input = $request->all();
+
+        foreach ($input as $key => $value) {
+            if (in_array($key, ['name', 'type_id', 'disc', 'discount_rate', 'price', 'quantity'])) {
+                $product->$key = $value;
+            }
+        }
+
+        if ($request->has('img_url')) {
+            $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
+            Storage::disk('public_htmlProducts')->put($image1, file_get_contents($request->img_url));
+            $image1 = asset('api/products/' . $image1);
+            $product->img_url = $image1;
+        }
+
+        $product->save();
+
+        $products = product::join('products_types', 'type_id', 'products_types.id')
+            ->get([
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
+            ]);
+
+        $types = products_type::get();
+
+        return response([
+            'status' => true,
+            'products' => $products,
+            'products_types' => $types
+        ], 200);
     }
 }

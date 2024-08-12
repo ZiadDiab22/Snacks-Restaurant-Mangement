@@ -29,6 +29,9 @@ class StatusesSeeder extends Seeder
             "name" => "ended",
         ]);
         order_status::create([
+            "name" => "under delivery",
+        ]);
+        order_status::create([
             "name" => "cancellled",
         ]);
     }

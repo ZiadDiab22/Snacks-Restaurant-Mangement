@@ -16,6 +16,7 @@ Route::post("login", [UserController::class, "login"]);
 Route::get("showProductTypes", [UserController::class, "showProductTypes"]);
 Route::get("showProducts", [UserController::class, "showProducts"]);
 Route::get("showProductsByLikes", [UserController::class, "showProductsByLikes"]);
+Route::get("showProductData/{id}", [UserController::class, "showProductData"]);
 Route::get("home", [UserController::class, "home"]);
 Route::post("search", [UserController::class, "search"]);
 Route::get("showCitiesSectors", [UserController::class, "showCitiesSectors"]);
@@ -65,6 +66,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("addCity", [AdminController::class, "addCity"])->middleware('checkAdminId');
     Route::post("editCity", [AdminController::class, "editCity"])->middleware('checkAdminId');
     Route::post("editSector", [AdminController::class, "editSector"])->middleware('checkAdminId');
+    Route::post("editProduct", [AdminController::class, "editProduct"])->middleware('checkAdminId');
     Route::post("addAnswer", [AdminController::class, "addAnswer"])->middleware('checkEmpId');
     Route::get("showMsgs", [AdminController::class, "showMsgs"])->middleware('checkEmpId');
     Route::post("createEmpAccount", [AdminController::class, "createEmpAccount"])->middleware('checkAdminId');

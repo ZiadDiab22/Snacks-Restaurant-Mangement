@@ -527,4 +527,51 @@ class UserController extends Controller
             'user_data' => $user_data,
         ]);
     }
+
+    public function showProductData($id)
+    {
+        if (!(product::where('id', $id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong Product ID"
+            ], 200);
+        }
+
+        $products = product::where('products.id', $id)->join('products_types', 'type_id', 'products_types.id')
+            ->get([
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
+            ]);
+
+        $products2 = product::where('products.id', '!=', $id)->where('products.type_id', $products[0]['type_id'])
+            ->join('products_types', 'type_id', 'products_types.id')
+            ->get([
+                'products.id',
+                'products.name',
+                'type_id',
+                'products_types.name as type_name',
+                'discount_rate',
+                'disc',
+                'likes',
+                'price',
+                'quantity',
+                'img_url',
+                'visible'
+            ]);
+
+        return response([
+            'status' => true,
+            'product' => $products,
+            'products with same type' => $products2,
+        ], 200);
+    }
 }
