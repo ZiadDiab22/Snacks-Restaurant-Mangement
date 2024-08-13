@@ -70,4 +70,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("addAnswer", [AdminController::class, "addAnswer"])->middleware('checkEmpId');
     Route::get("showMsgs", [AdminController::class, "showMsgs"])->middleware('checkEmpId');
     Route::post("createEmpAccount", [AdminController::class, "createEmpAccount"])->middleware('checkAdminId');
+    Route::get("orderStartWorking/{id}", [AdminController::class, "orderStartWorking"])->middleware('checkEmpId');
+    Route::get("orderEndWorking/{id}", [AdminController::class, "orderEndWorking"])->middleware('checkEmpId');
+    Route::get("orderCancelled/{id}", [AdminController::class, "orderCancelled"])->middleware('checkEmpId');
 });

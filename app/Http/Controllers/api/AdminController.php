@@ -12,6 +12,7 @@ use App\Models\products_type;
 use App\Models\sector;
 use App\Models\User;
 use App\Models\country;
+use App\Models\order;
 use App\Models\question;
 use Database\Seeders\CountriesSeeder;
 use Illuminate\Http\Request;
@@ -585,6 +586,105 @@ class AdminController extends Controller
             'status' => true,
             'products' => $products,
             'products_types' => $types
+        ], 200);
+    }
+
+    public function orderStartWorking($id)
+    {
+        if (!(order::where('id', $id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong order ID"
+            ], 200);
+        }
+
+        $order = order::find($id);
+
+        if ((auth()->user()->role_id == 2) && (auth()->user()->sector_id != $order->sector_id)) {
+            return response()->json([
+                'status' => false,
+                'message' => "You cant access orders from other sectors"
+            ], 200);
+        }
+
+        if (in_array($order->status_id, [3, 4, 5])) {
+            return response()->json([
+                'status' => false,
+                'message' => "you cant move directly from this state to the working state , only new => working"
+            ], 200);
+        }
+
+        $order->status_id = 2;
+        $order->save();
+        return response()->json([
+            'status' => true,
+            'message' => "done successfully"
+        ], 200);
+    }
+
+    public function orderEndWorking($id)
+    {
+        if (!(order::where('id', $id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong order ID"
+            ], 200);
+        }
+
+        $order = order::find($id);
+
+        if ((auth()->user()->role_id == 2) && (auth()->user()->sector_id != $order->sector_id)) {
+            return response()->json([
+                'status' => false,
+                'message' => "You cant access orders from other sectors"
+            ], 200);
+        }
+
+        if (in_array($order->status_id, [3, 1, 5])) {
+            return response()->json([
+                'status' => false,
+                'message' => "you cant move directly from this state to the working state , only working => under delivery"
+            ], 200);
+        }
+
+        $order->status_id = 4;
+        $order->save();
+        return response()->json([
+            'status' => true,
+            'message' => "done successfully"
+        ], 200);
+    }
+
+    public function orderCancelled($id)
+    {
+        if (!(order::where('id', $id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong order ID"
+            ], 200);
+        }
+
+        $order = order::find($id);
+
+        if ((auth()->user()->role_id == 2) && (auth()->user()->sector_id != $order->sector_id)) {
+            return response()->json([
+                'status' => false,
+                'message' => "You cant access orders from other sectors"
+            ], 200);
+        }
+
+        if (in_array($order->status_id, [2, 3, 4])) {
+            return response()->json([
+                'status' => false,
+                'message' => "you cant cancel order after start of working on it"
+            ], 200);
+        }
+
+        $order->status_id = 5;
+        $order->save();
+        return response()->json([
+            'status' => true,
+            'message' => "done successfully"
         ], 200);
     }
 }

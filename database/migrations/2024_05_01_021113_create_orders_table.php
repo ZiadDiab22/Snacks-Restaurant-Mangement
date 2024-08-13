@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('delivery_emp_id');
+            $table->unsignedInteger('delivery_emp_id')->nullable()->default(null);
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('emp_id');
             $table->unsignedInteger('sector_id');
-            $table->unsignedInteger('delivery_id');
+            $table->unsignedInteger('delivery_id')->nullable()->default(null);
             $table->unsignedInteger('status_id');
             $table->float('lat');
             $table->float('lng');
