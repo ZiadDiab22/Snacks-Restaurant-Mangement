@@ -13,8 +13,10 @@ use App\Models\sector;
 use App\Models\User;
 use App\Models\country;
 use App\Models\order;
+use App\Models\order_info;
 use App\Models\question;
 use Database\Seeders\CountriesSeeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -144,9 +146,11 @@ class AdminController extends Controller
             ->get([
                 'sectors.id',
                 'city_id',
-                'cities.name',
-                'lat',
-                'lng'
+                'cities.name as city_name',
+                'cities.lat as city_lat',
+                'cities.lng as city_lng',
+                'sectors.lat as sector_lat',
+                'sectors.lng as sector_lng'
             ]);
 
         return response()->json([
@@ -607,7 +611,7 @@ class AdminController extends Controller
             ], 200);
         }
 
-        if (in_array($order->status_id, [3, 4, 5])) {
+        if (in_array($order->status_id, [3, 4, 5, 6])) {
             return response()->json([
                 'status' => false,
                 'message' => "you cant move directly from this state to the working state , only new => working"
@@ -615,6 +619,8 @@ class AdminController extends Controller
         }
 
         $order->status_id = 2;
+        $order->emp_id = auth()->user()->id;
+
         $order->save();
         return response()->json([
             'status' => true,
@@ -640,14 +646,14 @@ class AdminController extends Controller
             ], 200);
         }
 
-        if (in_array($order->status_id, [3, 1, 5])) {
+        if (in_array($order->status_id, [4, 1, 5, 6])) {
             return response()->json([
                 'status' => false,
-                'message' => "you cant move directly from this state to the working state , only working => under delivery"
+                'message' => "you cant move directly from this state to the working state , only working => ended"
             ], 200);
         }
 
-        $order->status_id = 4;
+        $order->status_id = 3;
         $order->save();
         return response()->json([
             'status' => true,
@@ -673,7 +679,7 @@ class AdminController extends Controller
             ], 200);
         }
 
-        if (in_array($order->status_id, [2, 3, 4])) {
+        if (in_array($order->status_id, [2, 3, 4, 6])) {
             return response()->json([
                 'status' => false,
                 'message' => "you cant cancel order after start of working on it"
@@ -682,9 +688,306 @@ class AdminController extends Controller
 
         $order->status_id = 5;
         $order->save();
+
+        $user = user::find($order->user_id);
+        $user->badget += $order->total_price;
+        $user->save();
+
         return response()->json([
             'status' => true,
             'message' => "done successfully"
+        ], 200);
+    }
+
+    public function orderStartDeliver($id)
+    {
+        if (!(order::where('id', $id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong order ID"
+            ], 200);
+        }
+
+        $order = order::find($id);
+
+        if (in_array($order->status_id, [1, 2, 6, 5])) {
+            return response()->json([
+                'status' => false,
+                'message' => "you cant start deliver order before it ended"
+            ], 200);
+        }
+
+        $order->status_id = 4;
+        $order->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => "done successfully"
+        ], 200);
+    }
+
+    public function orderEndDeliver($id)
+    {
+        if (!(order::where('id', $id)->exists())) {
+            return response()->json([
+                'status' => false,
+                'message' => "Wrong order ID"
+            ], 200);
+        }
+
+        $order = order::find($id);
+
+        if (in_array($order->status_id, [1, 2, 3, 5])) {
+            return response()->json([
+                'status' => false,
+                'message' => "you cant end deliver order before you start it"
+            ], 200);
+        }
+
+        $order->status_id = 6;
+        $order->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => "done successfully"
+        ], 200);
+    }
+
+    public function showSectorOrders()
+    {
+        if (auth()->user()->role_id == 1) {
+            return response()->json([
+                'status' => false,
+                'message' => "this process for sectors employees only"
+            ], 200);
+        }
+
+        $orders = order::where('orders.sector_id', auth()->user()->sector_id)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'orders' => $orders
+        ], 200);
+    }
+
+    public function showEndedOrders()
+    {
+
+        $orders = order::where('orders.status_id', 3)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'orders' => $orders
+        ], 200);
+    }
+
+    public function addOrder(Request $request)
+    {
+
+        if (auth()->user()->role_id == 1) {
+            return response()->json([
+                'status' => false,
+                'message' => "this process for sectors employees only"
+            ], 200);
+        }
+
+        $validatedData = $request->validate([
+            'lat' => 'required',
+            'lng' => 'required',
+            'products' => 'required',
+        ]);
+
+        $validatedData['user_id'] = auth()->user()->id;
+        $validatedData['emp_id'] = auth()->user()->id;
+        $validatedData['status_id'] = 2;
+
+        $sec = sector::get(['id', 'lat', 'lng']);
+
+        $distances = [];
+        foreach ($sec as $s) {
+            $theta = $s['lng'] - $request->lng;
+            $dist = sin(deg2rad($s['lat'])) * sin(deg2rad($request->lat)) + cos(deg2rad($s['lat'])) * cos(deg2rad($request->lat)) * cos(deg2rad($theta));
+            $dist = acos($dist);
+            $dist = rad2deg($dist);
+            $miles = $dist * 60 * 1.1515;
+            $distance = $miles * 1.609344;
+            $distances[$s['id']] = $distance;
+        }
+
+        arsort($distances);
+        $distances = array_reverse($distances, true);
+
+        $validatedData['distance'] = current($distances);
+        $validatedData['sector_id'] = key($distances);
+        $validatedData['delivery_price'] = current($distances) * 10;
+        $validatedData['order_price'] = 0;
+        $validatedData['total_price'] = 0;
+        $order = order::create($validatedData);
+
+        $sum = 0;
+        foreach ($request->products as $p) {
+            DB::table('order_infos')->insert([
+                'order_id' => $order->id,
+                'product_id' => $p['id'],
+                'quantity' => $p['quantity'],
+            ]);
+
+            $pr = product::find($p['id']);
+            $sum += $p['quantity'] * ($pr->price * (100 - $pr->discount_rate) / 100);
+        }
+
+        $order->order_price = $sum;
+        $order->total_price = $sum + $order->delivery_price;
+        $order->save();
+
+        $orders = order::where('user_id', auth()->user()->id)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'message' => 'done successfully',
+            'orders' => $orders
+        ], 200);
+    }
+
+    public function addCash(Request $request)
+    {
+        $request->validate([
+            'phone_no' => 'required',
+            'cash' => 'required',
+        ]);
+
+        $user = User::where('phone_no', $request->phone_no)->get();
+
+        User::where('phone_no', $request->phone_no)->update([
+            'badget' => $user[0]['badget'] + $request->cash,
+        ]);
+
+        $user = User::where('phone_no', $request->phone_no)->get();
+
+        return response([
+            'status' => true,
+            'message' => 'done successfully',
+            'user_data' => $user,
         ], 200);
     }
 }

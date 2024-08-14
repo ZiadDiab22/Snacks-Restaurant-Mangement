@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('cities', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('country_id');
-            $table->float('lat');
-            $table->float('lng');
+            $table->float('lat', 16, 10);
+            $table->float('lng', 16, 10);
             $table->string('name');
             $table->foreign('country_id')->references('id')
                 ->on('countries')->onDelete('cascade');

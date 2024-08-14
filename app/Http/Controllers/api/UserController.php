@@ -8,6 +8,7 @@ use App\Models\city;
 use App\Models\favourite;
 use App\Models\like;
 use App\Models\order;
+use App\Models\order_info;
 use App\Models\product;
 use App\Models\products_type;
 use App\Models\question;
@@ -47,7 +48,7 @@ class UserController extends Controller
         }
 
         $validatedData['password'] = bcrypt($request->password);
-        $validatedData['role_id'] = 4;
+        $validatedData['role_id'] = 3;
 
         if ($request->has('img_url')) {
             $image1 = Str::random(32) . "." . $request->img_url->getClientOriginalExtension();
@@ -191,7 +192,7 @@ class UserController extends Controller
                 'updated_at'
             ]);
 
-        $msgs = question::where('user_id', auth()->user()->id)->whereNotNull('emp_id')->get();
+        $msgs = question::where('user_id', auth()->user()->id)->get();
 
         return response([
             'status' => true,
@@ -394,7 +395,7 @@ class UserController extends Controller
     public function showFavourites()
     {
         $fav = favourite::where('user_id', auth()->user()->id)
-            ->join('products', 'products.id', 'user_id')
+            ->join('products', 'products.id', 'product_id')
             ->get(['favourites.id', 'user_id', 'product_id', 'name', 'price', 'img_url', 'likes']);
         foreach ($fav as $f) {
             if (like::where('product_id', $f['product_id'])->where('user_id', auth()->user()->id)->exists())
@@ -572,6 +573,168 @@ class UserController extends Controller
             'status' => true,
             'product' => $products,
             'products with same type' => $products2,
+        ], 200);
+    }
+
+    public function sendOrder(Request $request)
+    {
+        $validatedData = $request->validate([
+            'lat' => 'required',
+            'lng' => 'required',
+            'products' => 'required',
+        ]);
+
+        $validatedData['user_id'] = auth()->user()->id;
+        $validatedData['status_id'] = 1;
+
+        $sec = sector::get(['id', 'lat', 'lng']);
+
+        $distances = [];
+        foreach ($sec as $s) {
+            $theta = $s['lng'] - $request->lng;
+            $dist = sin(deg2rad($s['lat'])) * sin(deg2rad($request->lat)) + cos(deg2rad($s['lat'])) * cos(deg2rad($request->lat)) * cos(deg2rad($theta));
+            $dist = acos($dist);
+            $dist = rad2deg($dist);
+            $miles = $dist * 60 * 1.1515;
+            $distance = $miles * 1.609344;
+            $distances[$s['id']] = $distance;
+        }
+
+        arsort($distances);
+        $distances = array_reverse($distances, true);
+
+        $validatedData['distance'] = current($distances);
+        $validatedData['sector_id'] = key($distances);
+        $validatedData['delivery_price'] = current($distances) * 10;
+        $validatedData['order_price'] = 0;
+        $validatedData['total_price'] = 0;
+        $order = order::create($validatedData);
+
+        $sum = 0;
+        foreach ($request->products as $p) {
+            DB::table('order_infos')->insert([
+                'order_id' => $order->id,
+                'product_id' => $p['id'],
+                'quantity' => $p['quantity'],
+            ]);
+
+            $pr = product::find($p['id']);
+            $sum += $p['quantity'] * ($pr->price * (100 - $pr->discount_rate) / 100);
+        }
+
+        $order->order_price = $sum;
+        $order->total_price = $sum + $order->delivery_price;
+        $order->save();
+
+        $user = user::find(auth()->user()->id);
+        if ($order->total_price > $user->badget) {
+            order::where('id', $order->id)->delete();
+            return response([
+                'status' => false,
+                'message' => 'you dont have enough money'
+            ], 200);
+        } else {
+            $user->badget -= $order->total_price;
+            $user->save();
+        }
+
+        $orders = order::where('user_id', auth()->user()->id)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'message' => 'done successfully',
+            'orders' => $orders
+        ], 200);
+    }
+
+    public function showUserOrders()
+    {
+
+        $orders = order::where('orders.user_id', auth()->user()->id)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'orders' => $orders
         ], 200);
     }
 }

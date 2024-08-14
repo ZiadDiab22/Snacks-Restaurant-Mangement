@@ -15,12 +15,14 @@ return new class extends Migration
             $table->increments('id');
             $table->unsignedInteger('delivery_emp_id')->nullable()->default(null);
             $table->unsignedInteger('user_id');
-            $table->unsignedInteger('emp_id');
+            $table->unsignedInteger('emp_id')->nullable()->default(null);
             $table->unsignedInteger('sector_id');
-            $table->unsignedInteger('delivery_id')->nullable()->default(null);
             $table->unsignedInteger('status_id');
-            $table->float('lat');
-            $table->float('lng');
+            $table->float('lat', 16, 10);
+            $table->float('lng', 16, 10);
+            $table->float('distance');
+            $table->float('delivery_price');
+            $table->float('order_price');
             $table->float('total_price');
             $table->foreign('delivery_emp_id')->references('id')
                 ->on('users')->onDelete('cascade');
@@ -30,8 +32,6 @@ return new class extends Migration
                 ->on('users')->onDelete('cascade');
             $table->foreign('sector_id')->references('id')
                 ->on('sectors')->onDelete('cascade');
-            $table->foreign('delivery_id')->references('id')
-                ->on('delivery_orders')->onDelete('cascade');
             $table->foreign('status_id')->references('id')
                 ->on('order_statuses')->onDelete('cascade');
         });

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female']);
             $table->string('phone_no')->unique();
             $table->string('img_url')->nullable()->default(null);
-            $table->integer('badget')->nullable()->default(0);
+            $table->float('badget')->nullable()->default(0);
             $table->boolean('blocked')->default(0);
             $table->timestamps();
             $table->foreign('sector_id')->references('id')

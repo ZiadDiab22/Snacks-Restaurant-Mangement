@@ -11,6 +11,16 @@ class order extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'status_id'
+        'status_id',
+        'user_id',
+        'delivery_emp_id',
+        'emp_id',
+        'sector_id',
+        'lat',
+        'lng',
+        'distance',
+        'delivery_price',
+        'order_price',
+        'total_price'
     ];
 }
