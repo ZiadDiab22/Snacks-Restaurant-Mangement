@@ -1448,4 +1448,128 @@ class AdminController extends Controller
             'orders' => $orders
         ], 200);
     }
+
+    public function getReport(Request $request)
+    {
+        $request->validate([
+            'date1' => 'required',
+            'date2' => 'required',
+        ]);
+
+        $users_count = DB::table('users')
+            ->whereDate('created_at', '>=', $request->date1)
+            ->whereDate('created_at', '<=', $request->date2)
+            ->count();
+
+        $users = DB::table('users as u')
+            ->whereDate('created_at', '>=', $request->date1)
+            ->whereDate('created_at', '<=', $request->date2)
+            ->join('roles as r', 'r.id', 'u.role_id')
+            ->leftjoin('cities as c', 'c.id', 'u.city_id')
+            ->get([
+                'u.id',
+                'u.name',
+                'sector_id',
+                'role_id',
+                'r.name as role_name',
+                'city_id',
+                'c.name as city_name',
+                'email',
+                'birth_date',
+                'password',
+                'gender',
+                'phone_no',
+                'img_url',
+                'badget',
+                'blocked',
+                'created_at',
+                'updated_at'
+            ]);
+
+        $orders_count = DB::table('orders')
+            ->whereDate('created_at', '>=', $request->date1)
+            ->whereDate('created_at', '<=', $request->date2)
+            ->count();
+
+        $orders = order::whereDate('orders.created_at', '>=', $request->date1)
+            ->whereDate('orders.created_at', '<=', $request->date2)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
+            ]);
+
+        $total_products = 0;
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            foreach ($products as $p) {
+                $total_products += $p['quantity'];
+            }
+        }
+
+        $total_prices = DB::table('orders')
+            ->whereDate('created_at', '>=', $request->date1)
+            ->whereDate('created_at', '<=', $request->date2)
+            ->sum('total_price');
+
+        $order_prices = DB::table('orders')
+            ->whereDate('created_at', '>=', $request->date1)
+            ->whereDate('created_at', '<=', $request->date2)
+            ->sum('order_price');
+
+        $delivery_prices = DB::table('orders')
+            ->whereDate('created_at', '>=', $request->date1)
+            ->whereDate('created_at', '<=', $request->date2)
+            ->sum('delivery_price');
+
+        return response()->json([
+            'status' => true,
+            'users_count' => $users_count,
+            'users' => $users,
+            'orders_count' => $orders_count,
+            'orders' => $orders,
+            '$order_prices' => $order_prices,
+            '$delivery_prices' => $delivery_prices,
+            '$total_prices' => $total_prices,
+            '$total_products' => $total_products
+        ]);
+    }
 }

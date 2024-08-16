@@ -82,4 +82,5 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get("showUserOrders", [UserController::class, "showUserOrders"])->middleware('checkUserId');
     Route::get("showAllOrders", [AdminController::class, "showAllOrders"])->middleware('checkAdminId');
     Route::post("addCash", [AdminController::class, "addCash"])->middleware('checkEmpId');
+    Route::post("getReport", [AdminController::class, "getReport"])->middleware('checkAdminId');
 });
