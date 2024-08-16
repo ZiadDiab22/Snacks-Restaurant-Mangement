@@ -620,11 +620,93 @@ class AdminController extends Controller
 
         $order->status_id = 2;
         $order->emp_id = auth()->user()->id;
-
         $order->save();
+
+        if (auth()->user()->role_id == 2) {
+            $orders = $orders = order::where('orders.sector_id', auth()->user()->sector_id)
+                ->join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        } else {
+            $orders = order::join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        }
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
         return response()->json([
             'status' => true,
-            'message' => "done successfully"
+            'message' => "done successfully",
+            'orders' => $orders
         ], 200);
     }
 
@@ -655,9 +737,92 @@ class AdminController extends Controller
 
         $order->status_id = 3;
         $order->save();
+
+        if (auth()->user()->role_id == 2) {
+            $orders = $orders = order::where('orders.sector_id', auth()->user()->sector_id)
+                ->join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        } else {
+            $orders = order::join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        }
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
         return response()->json([
             'status' => true,
-            'message' => "done successfully"
+            'message' => "done successfully",
+            'orders' => $orders
         ], 200);
     }
 
@@ -671,6 +836,13 @@ class AdminController extends Controller
         }
 
         $order = order::find($id);
+
+        if (in_array(auth()->user()->role_id, [3, 4]) && (auth()->user()->id != $order->user_id)) {
+            return response()->json([
+                'status' => false,
+                'message' => "Only order sender or sector employee can cancel orders"
+            ], 200);
+        }
 
         if ((auth()->user()->role_id == 2) && (auth()->user()->sector_id != $order->sector_id)) {
             return response()->json([
@@ -693,9 +865,124 @@ class AdminController extends Controller
         $user->badget += $order->total_price;
         $user->save();
 
+
+        if (auth()->user()->role_id == 2) {
+            $orders = $orders = order::where('orders.sector_id', auth()->user()->sector_id)
+                ->join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        } else if (auth()->user()->role_id == 1) {
+            $orders = order::join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        } else {
+            $orders = order::where('orders.user_id', auth()->user()->id)
+                ->join('order_statuses as s', 's.id', 'status_id')
+                ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+                ->join('users as u', 'u.id', 'user_id')
+                ->leftjoin('users as e', 'e.id', 'emp_id')
+                ->orderBy('orders.created_at', 'desc')
+                ->get([
+                    'orders.id as order_id',
+                    'delivery_emp_id',
+                    'd.name as delivery_emp_name',
+                    'user_id',
+                    'u.name as user_name',
+                    'u.email as user_email',
+                    'u.birth_date as user_birth_date',
+                    'u.gender as user_gender',
+                    'u.phone_no as user_phone_no',
+                    'u.img_url as user_img_url',
+                    'emp_id',
+                    'e.name as emp_name',
+                    'orders.sector_id',
+                    'status_id',
+                    's.name as status_name',
+                    'lat',
+                    'lng',
+                    'distance',
+                    'delivery_price',
+                    'order_price',
+                    'total_price',
+                    'orders.created_at',
+                    'orders.updated_at'
+                ]);
+        }
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
         return response()->json([
             'status' => true,
-            'message' => "done successfully"
+            'message' => "done successfully",
+            'orders' => $orders
         ], 200);
     }
 
@@ -720,9 +1007,59 @@ class AdminController extends Controller
         $order->status_id = 4;
         $order->save();
 
-        return response()->json([
+        $orders = order::where('orders.status_id', 3)->orWhere('orders.status_id', 4)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
             'status' => true,
-            'message' => "done successfully"
+            'orders' => $orders
         ], 200);
     }
 
@@ -747,9 +1084,59 @@ class AdminController extends Controller
         $order->status_id = 6;
         $order->save();
 
-        return response()->json([
+        $orders = order::where('orders.status_id', 3)->orWhere('orders.status_id', 4)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
             'status' => true,
-            'message' => "done successfully"
+            'orders' => $orders
         ], 200);
     }
 
@@ -767,12 +1154,18 @@ class AdminController extends Controller
             ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
             ->join('users as u', 'u.id', 'user_id')
             ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
             ->get([
                 'orders.id as order_id',
                 'delivery_emp_id',
                 'd.name as delivery_emp_name',
                 'user_id',
                 'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
                 'emp_id',
                 'e.name as emp_name',
                 'orders.sector_id',
@@ -783,7 +1176,9 @@ class AdminController extends Controller
                 'distance',
                 'delivery_price',
                 'order_price',
-                'total_price'
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
             ]);
 
         foreach ($orders as $o) {
@@ -813,17 +1208,23 @@ class AdminController extends Controller
     public function showEndedOrders()
     {
 
-        $orders = order::where('orders.status_id', 3)
+        $orders = order::where('orders.status_id', 3)->orWhere('orders.status_id', 4)
             ->join('order_statuses as s', 's.id', 'status_id')
             ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
             ->join('users as u', 'u.id', 'user_id')
             ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
             ->get([
                 'orders.id as order_id',
                 'delivery_emp_id',
                 'd.name as delivery_emp_name',
                 'user_id',
                 'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
                 'emp_id',
                 'e.name as emp_name',
                 'orders.sector_id',
@@ -834,7 +1235,9 @@ class AdminController extends Controller
                 'distance',
                 'delivery_price',
                 'order_price',
-                'total_price'
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
             ]);
 
         foreach ($orders as $o) {
@@ -880,26 +1283,18 @@ class AdminController extends Controller
         $validatedData['user_id'] = auth()->user()->id;
         $validatedData['emp_id'] = auth()->user()->id;
         $validatedData['status_id'] = 2;
+        $validatedData['sector_id'] = auth()->user()->sector_id;
 
-        $sec = sector::get(['id', 'lat', 'lng']);
+        $s = sector::where('id', auth()->user()->sector_id)->get(['lat', 'lng']);
 
-        $distances = [];
-        foreach ($sec as $s) {
-            $theta = $s['lng'] - $request->lng;
-            $dist = sin(deg2rad($s['lat'])) * sin(deg2rad($request->lat)) + cos(deg2rad($s['lat'])) * cos(deg2rad($request->lat)) * cos(deg2rad($theta));
-            $dist = acos($dist);
-            $dist = rad2deg($dist);
-            $miles = $dist * 60 * 1.1515;
-            $distance = $miles * 1.609344;
-            $distances[$s['id']] = $distance;
-        }
+        $theta = $s[0]['lng'] - $request->lng;
+        $dist = sin(deg2rad($s[0]['lat'])) * sin(deg2rad($request->lat)) + cos(deg2rad($s[0]['lat'])) * cos(deg2rad($request->lat)) * cos(deg2rad($theta));
+        $dist = acos($dist);
+        $dist = rad2deg($dist);
+        $miles = $dist * 60 * 1.1515;
 
-        arsort($distances);
-        $distances = array_reverse($distances, true);
-
-        $validatedData['distance'] = current($distances);
-        $validatedData['sector_id'] = key($distances);
-        $validatedData['delivery_price'] = current($distances) * 10;
+        $validatedData['distance'] = $miles * 1.609344;
+        $validatedData['delivery_price'] = $validatedData['distance'] * 10;
         $validatedData['order_price'] = 0;
         $validatedData['total_price'] = 0;
         $order = order::create($validatedData);
@@ -931,6 +1326,11 @@ class AdminController extends Controller
                 'd.name as delivery_emp_name',
                 'user_id',
                 'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
                 'emp_id',
                 'e.name as emp_name',
                 'orders.sector_id',
@@ -988,6 +1388,64 @@ class AdminController extends Controller
             'status' => true,
             'message' => 'done successfully',
             'user_data' => $user,
+        ], 200);
+    }
+
+    public function showAllOrders()
+    {
+
+        $orders = order::join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'orders' => $orders
         ], 200);
     }
 }

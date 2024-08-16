@@ -286,29 +286,74 @@ class UserController extends Controller
 
         $order = order::find($id);
 
-        if ($order->status_id == 1) {
-            $order->status_id = 4;
-            $order->save();
-            return response([
-                'status' => true,
-                'message' => 'done successfully'
-            ], 200);
-        } else if ($order->status_id == 4) {
-            return response([
-                'status' => true,
-                'message' => 'order already cancelled'
-            ], 200);
-        } else if ($order->status_id == 2) {
-            return response([
-                'status' => true,
-                'message' => 'The order cant be canceled because its in progress'
-            ], 200);
-        } else {
-            return response([
-                'status' => true,
-                'message' => 'The order cant be canceled because its already done'
+        if (in_array($order->status_id, [2, 3, 4, 6])) {
+            return response()->json([
+                'status' => false,
+                'message' => "you cant cancel order after start of working on it"
             ], 200);
         }
+
+        $order->status_id = 5;
+        $order->save();
+
+        $user = user::find($order->user_id);
+        $user->badget += $order->total_price;
+        $user->save();
+
+        $orders = order::where('orders.user_id', auth()->user()->id)
+            ->join('order_statuses as s', 's.id', 'status_id')
+            ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
+            ->join('users as u', 'u.id', 'user_id')
+            ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
+            ->get([
+                'orders.id as order_id',
+                'delivery_emp_id',
+                'd.name as delivery_emp_name',
+                'user_id',
+                'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
+                'emp_id',
+                'e.name as emp_name',
+                'orders.sector_id',
+                'status_id',
+                's.name as status_name',
+                'lat',
+                'lng',
+                'distance',
+                'delivery_price',
+                'order_price',
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
+            ]);
+
+        foreach ($orders as $o) {
+            $products = order_info::where('order_id', $o['order_id'])
+                ->join('products as p', 'product_id', 'p.id')
+                ->join('products_types as t', 'type_id', 't.id')
+                ->get([
+                    'product_id',
+                    'order_infos.quantity',
+                    'p.name',
+                    'disc',
+                    'price',
+                    'discount_rate',
+                    'likes',
+                    'type_id',
+                    't.name as type'
+                ]);
+            $o['products'] = $products;
+        }
+
+        return response([
+            'status' => true,
+            'orders' => $orders
+        ], 200);
     }
 
     public function search(Request $request)
@@ -643,12 +688,18 @@ class UserController extends Controller
             ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
             ->join('users as u', 'u.id', 'user_id')
             ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
             ->get([
                 'orders.id as order_id',
                 'delivery_emp_id',
                 'd.name as delivery_emp_name',
                 'user_id',
                 'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
                 'emp_id',
                 'e.name as emp_name',
                 'orders.sector_id',
@@ -659,7 +710,9 @@ class UserController extends Controller
                 'distance',
                 'delivery_price',
                 'order_price',
-                'total_price'
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
             ]);
 
         foreach ($orders as $o) {
@@ -695,12 +748,18 @@ class UserController extends Controller
             ->leftjoin('users as d', 'd.id', 'delivery_emp_id')
             ->join('users as u', 'u.id', 'user_id')
             ->leftjoin('users as e', 'e.id', 'emp_id')
+            ->orderBy('orders.created_at', 'desc')
             ->get([
                 'orders.id as order_id',
                 'delivery_emp_id',
                 'd.name as delivery_emp_name',
                 'user_id',
                 'u.name as user_name',
+                'u.email as user_email',
+                'u.birth_date as user_birth_date',
+                'u.gender as user_gender',
+                'u.phone_no as user_phone_no',
+                'u.img_url as user_img_url',
                 'emp_id',
                 'e.name as emp_name',
                 'orders.sector_id',
@@ -711,7 +770,9 @@ class UserController extends Controller
                 'distance',
                 'delivery_price',
                 'order_price',
-                'total_price'
+                'total_price',
+                'orders.created_at',
+                'orders.updated_at'
             ]);
 
         foreach ($orders as $o) {

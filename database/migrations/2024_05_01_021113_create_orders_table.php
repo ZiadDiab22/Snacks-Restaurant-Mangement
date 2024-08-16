@@ -24,6 +24,7 @@ return new class extends Migration
             $table->float('delivery_price');
             $table->float('order_price');
             $table->float('total_price');
+            $table->timestamps();
             $table->foreign('delivery_emp_id')->references('id')
                 ->on('users')->onDelete('cascade');
             $table->foreign('user_id')->references('id')

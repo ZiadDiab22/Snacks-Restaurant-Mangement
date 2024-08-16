@@ -72,7 +72,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("createEmpAccount", [AdminController::class, "createEmpAccount"])->middleware('checkAdminId');
     Route::get("orderStartWorking/{id}", [AdminController::class, "orderStartWorking"])->middleware('checkEmpId');
     Route::get("orderEndWorking/{id}", [AdminController::class, "orderEndWorking"])->middleware('checkEmpId');
-    Route::get("orderCancelled/{id}", [AdminController::class, "orderCancelled"])->middleware('checkEmpId');
+    Route::get("orderCancelled/{id}", [AdminController::class, "orderCancelled"]);
     Route::get("orderStartDeliver/{id}", [AdminController::class, "orderStartDeliver"])->middleware('checkDelId');
     Route::get("orderEndDeliver/{id}", [AdminController::class, "orderEndDeliver"])->middleware('checkDelId');
     Route::post("sendOrder", [UserController::class, "sendOrder"])->middleware('checkUserId');
@@ -80,5 +80,6 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get("showSectorOrders", [AdminController::class, "showSectorOrders"])->middleware('checkEmpId');
     Route::get("showEndedOrders", [AdminController::class, "showEndedOrders"])->middleware('checkDelId');
     Route::get("showUserOrders", [UserController::class, "showUserOrders"])->middleware('checkUserId');
+    Route::get("showAllOrders", [AdminController::class, "showAllOrders"])->middleware('checkAdminId');
     Route::post("addCash", [AdminController::class, "addCash"])->middleware('checkEmpId');
 });

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class order extends Model
 {
     use HasFactory;
-    public $timestamps = false;
 
     protected $fillable = [
         'status_id',
