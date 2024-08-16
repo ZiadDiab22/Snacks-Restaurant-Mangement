@@ -1566,7 +1566,7 @@ class AdminController extends Controller
             'users' => $users,
             'orders_count' => $orders_count,
             'orders' => $orders,
-            '$order_prices' => $order_prices,
+            '$orders_prices' => $order_prices,
             '$delivery_prices' => $delivery_prices,
             '$total_prices' => $total_prices,
             '$total_products' => $total_products
